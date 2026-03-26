@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda PRO</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#121212;color:#fff}
+header{background:#000;padding:12px;text-align:center}
+.card{background:#1e1e1e;margin:10px;padding:15px;border-radius:14px}
+input,button{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:none}
+input{background:#2a2a2a;color:#fff}
+button{background:#2e7d32;color:#fff;font-weight:bold}
+.ag{background:#2a2a2a;margin-top:8px;padding:10px;border-radius:10px}
+.small{font-size:12px;color:#aaa}
+.pago{border-left:5px solid #2e7d32}
+.pendente{border-left:5px solid #1565c0}
+</style>
+</head>
+
+<body>
+
+<header>📅 Agenda PRO</header>
+
+<div class="card">
+<input id="cliente" placeholder="Cliente">
+<input id="tel" placeholder="Telefone">
+<input id="data" type="date">
+<input id="hora" type="time">
+<input id="valor" type="number" placeholder="Valor">
+<button onclick="salvar()">Salvar</button>
+</div>
+
+<div class="card">
+<input id="fBusca" placeholder="Buscar" oninput="render()">
+<input id="fData" type="date" onchange="render()">
+</div>
+
+<div class="card">
+<b>📊 Relatório</b>
+<div id="relatorio"></div>
+</div>
+
+<div class="card">
+<div id="lista"></div>
+</div>
+
+<!-- BOTÕES GOOGLE (SEM DUPLICAÇÃO) -->
+<div class="card">
+<button onclick="initGoogle()">🔑 Conectar Google</button>
+<button onclick="loginGoogle()">🔐 Login Google</button>
+<button onclick="salvarDrive()">☁️ Backup Drive</button>
+</div>
+
+<script>
+let ag=[];
+let editId=null;
+
+/* LOCAL */
+function salvarLocal(){localStorage.setItem("agenda",JSON.stringify(ag))}
+function carregarLocal(){ag=JSON.parse(localStorage.getItem("agenda")||"[]")}
+
+/* CRUD */
+function salvar(){
+ if(!cliente.value||!data.value||!hora.value) return alert("Preencha tudo");
+
+ ag.push({
+  id:Date.now(),
+  cliente:cliente.value,
+  tel:tel.value,
+  data:data.value,
+  hora:hora.value,
+  valor:+valor.value||0,
+  pago:false,
+  favorito:false,
+  confirmado:false
+ });
+
+ salvarLocal();
+ render();
+}
+
+function excluir(id){
+ ag=ag.filter(a=>a.id!==id);
+ salvarLocal();
+ render();
+}
+
+function pagar(id){
+ let a=ag.find(x=>x.id===id);
+ a.pago=true;
+ salvarLocal();
+ render();
+}
+
+function favoritar(id){
+ let a=ag.find(x=>x.id===id);
+ a.favorito=!a.favorito;
+ salvarLocal();
+ render();
+}
+
+function confirmar(id){
+ let a=ag.find(x=>x.id===id);
+ a.confirmado=true;
+ salvarLocal();
+ render();
+}
+
+function enviarZap(id){
+ let a=ag.find(x=>x.id===id);
+ if(!a.tel)return alert("Sem telefone");
+ let numero=a.tel.replace(/\D/g,"");
+ let msg=encodeURIComponent("Olá "+a.cliente+" confirme seu horário "+a.hora);
+ window.open("https://wa.me/55"+numero+"?text="+msg);
+}
+
+/* RENDER */
+function render(){
+ lista.innerHTML="";
+ let hoje=new Date().toISOString().slice(0,10);
+
+ ag.forEach(a=>{
+  lista.innerHTML+=`
+  <div class="ag ${a.pago?'pago':'pendente'}">
+  <b>${a.data} ${a.hora}</b><br>
+  ${a.confirmado?"✅ Confirmado":"⚠️ Pendente"}<br>
+  ${a.cliente} — R$ ${a.valor}<br>
+  <span class="small">${a.tel||""}</span><br>
+  <button onclick="favoritar(${a.id})">⭐</button>
+  <button onclick="pagar(${a.id})">💰</button>
+  <button onclick="confirmar(${a.id})">✔</button>
+  <button onclick="enviarZap(${a.id})">📲</button>
+  <button onclick="excluir(${a.id})">🗑</button>
+  </div>`;
+ });
+
+ gerarRelatorio();
+}
+
+/* RELATÓRIO */
+function gerarRelatorio(){
+ let total=ag.reduce((s,a)=>s+a.valor,0);
+ relatorio.innerHTML=`
+ Dia: R$ ${total.toFixed(2)}<br>
+ Recebido: R$ ${total.toFixed(2)}<br>
+ Pendente: R$ 0.00<br>
+ Mês: R$ ${total.toFixed(2)}
+ `;
+}
+
+/* GOOGLE DRIVE */
+const CLIENT_ID = "877191590019-dtg0s35ceav4f820ba9bj9rboddgk87d.apps.googleusercontent.com";
+const API_KEY = "AIzaSyBFItoKlSptv86j5Mo1XwwlJSTzJFgQ5No";
+
+function initGoogle(){
+ gapi.load('client:auth2', async ()=>{
+  await gapi.client.init({
+   apiKey: API_KEY,
+   clientId: CLIENT_ID,
+   discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+   scope: "https://www.googleapis.com/auth/drive.file"
+  });
+  alert("Google conectado!");
+ });
+}
+
+function loginGoogle(){
+ gapi.auth2.getAuthInstance().signIn();
+}
+
+function salvarDrive(){
+ if(!gapi.auth.getToken()){
+  alert("Faça login primeiro");
+  return;
+ }
+
+ let token=gapi.auth.getToken();
+
+ let arquivo=new Blob([JSON.stringify(ag)],{type:"application/json"});
+
+ let form=new FormData();
+ form.append("metadata", new Blob([JSON.stringify({name:"agenda_backup.json"})],{type:"application/json"}));
+ form.append("file",arquivo);
+
+ fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{
+  method:"POST",
+  headers:{Authorization:"Bearer "+token.access_token},
+  body:form
+ }).then(()=>alert("Backup salvo 🚀"));
+}
+
+window.onload=()=>{carregarLocal();render()}
+</script>
+
+<script src="https://apis.google.com/js/api.js"></script>
+
+</body>
+</html>
