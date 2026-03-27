@@ -78,7 +78,16 @@ let ag=[];
 let editId=null;
 let accessToken = null;
 
+function toggleDrive(){
+ let box = document.getElementById("boxDrive");
 
+ if(box.style.display === "none"){
+  box.style.display = "block";
+ }else{
+  box.style.display = "none";
+ }
+}
+ 
  async function renomearDrive(novoNome){
  let fileId = localStorage.getItem("drive_file_id");
 
@@ -427,19 +436,11 @@ if(accessToken){
  syncDrive();
 }, 10000); // a cada 5 segundos
 
- function toggleDrive(){
- let box = document.getElementById("boxDrive");
 
- if(box.style.display === "none"){
-  box.style.display = "block";
- }else{
-  box.style.display = "none";
- }
- }
 
 </script>
-
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <button onclick="toggleDrive()" id="btnConfig">⚙️</button>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 </body>
 </html>
