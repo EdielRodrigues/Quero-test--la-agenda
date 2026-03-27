@@ -198,11 +198,13 @@ function handleCredentialResponse(response){
  }
 
  
- function salvarDrive(){
+ async function salvarDrive(){
  if(!accessToken){
   alert("Conecte o Drive primeiro");
   return;
  }
+
+ let fileId = localStorage.getItem("drive_file_id");
 
  let arquivo = new Blob([JSON.stringify(ag)], {type:"application/json"});
 
@@ -213,17 +215,32 @@ function handleCredentialResponse(response){
 
  form.append("file", arquivo);
 
- fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
-  method: "POST",
-  headers: {
+ let url = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+ let method = "POST";
+
+ if(fileId){
+  url = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`;
+  method = "PATCH";
+ }
+
+ let res = await fetch(url,{
+  method: method,
+  headers:{
    Authorization: "Bearer " + accessToken
   },
   body: form
- }).then(()=>{
-  alert("Backup salvo no Drive 🚀");
  });
+
+ let data = await res.json();
+
+ if(!fileId){
+  localStorage.setItem("drive_file_id", data.id);
  }
 
+ alert("Backup atualizado 🚀");
+ }
+
+ 
 window.onload=()=>{carregarLocal();render()}
 </script>
 
