@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
  
-<div id="usuarioLogado"></div><title>Agenda PRO</title>
+<div id="usuarioLogado"></div>
+ <title>Agenda PRO</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#121212;color:#fff}
@@ -49,7 +50,7 @@ button{background:#2e7d32;color:#fff;font-weight:bold}
 
 <!-- BOTÕES GOOGLE (SEM DUPLICAÇÃO) -->
 <div class="card">
-<button onclick="initGoogle()">🔑 Conectar Google</button>
+<button onclick="conectarDrive()">🔑 Conectar Drive</button>
 <button onclick="loginGoogle()">🔐 Login Google</button>
 <button onclick="salvarDrive()">☁️ Backup Drive</button>
 </div>
@@ -57,7 +58,21 @@ button{background:#2e7d32;color:#fff;font-weight:bold}
 <script>
 let ag=[];
 let editId=null;
+let accessToken = null;
 
+function conectarDrive(){
+ const client = google.accounts.oauth2.initTokenClient({
+  client_id: "877191590019-7ob34ind8ksu4fjp91orrrrvnk9p10hp.apps.googleusercontent.com",
+  scope: "https://www.googleapis.com/auth/drive.file",
+  callback: (res)=>{
+   accessToken = res.access_token;
+   alert("Drive conectado 🚀");
+  }
+ });
+
+ client.requestAccessToken();
+}
+ 
 /* LOCAL */
 function salvarLocal(){localStorage.setItem("agenda",JSON.stringify(ag))}
 function carregarLocal(){ag=JSON.parse(localStorage.getItem("agenda")||"[]")}
@@ -184,25 +199,30 @@ function handleCredentialResponse(response){
 
  
  function salvarDrive(){
- if(!gapi.auth.getToken()){
- alert("Faça login primeiro");
+ if(!accessToken){
+  alert("Conecte o Drive primeiro");
   return;
  }
 
- let token=gapi.auth.getToken();
+ let arquivo = new Blob([JSON.stringify(ag)], {type:"application/json"});
 
- let arquivo=new Blob([JSON.stringify(ag)],{type:"application/json"});
+ let form = new FormData();
+ form.append("metadata", new Blob([JSON.stringify({
+  name: "agenda_backup.json"
+ })], {type:"application/json"}));
 
- let form=new FormData();
- form.append("metadata", new Blob([JSON.stringify({name:"agenda_backup.json"})],{type:"application/json"}));
- form.append("file",arquivo);
+ form.append("file", arquivo);
 
- fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",{
-  method:"POST",
-  headers:{Authorization:"Bearer "+token.access_token},
-  body:form
- }).then(()=>alert("Backup salvo 🚀"));
-}
+ fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+  method: "POST",
+  headers: {
+   Authorization: "Bearer " + accessToken
+  },
+  body: form
+ }).then(()=>{
+  alert("Backup salvo no Drive 🚀");
+ });
+ }
 
 window.onload=()=>{carregarLocal();render()}
 </script>
