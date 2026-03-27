@@ -18,6 +18,20 @@ button{background:#2e7d32;color:#fff;font-weight:bold}
 .small{font-size:12px;color:#aaa}
 .pago{border-left:5px solid #2e7d32}
 .pendente{border-left:5px solid #1565c0}
+ #btnConfig{
+ position: fixed;
+ right: 15px;
+ bottom: 20px;
+ width: 55px;
+ height: 55px;
+ border-radius: 50%;
+ background: #2e7d32;
+ color: #fff;
+ font-size: 22px;
+ border: none;
+ box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+ z-index: 999;
+ }
 </style>
 </head>
 
@@ -422,10 +436,10 @@ if(accessToken){
   box.style.display = "none";
  }
  }
- <button onclick="toggleDrive()">⚙️ Configurações</button>
+
 </script>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
+<button onclick="toggleDrive()" id="btnConfig">⚙️</button>
 </body>
 </html>
