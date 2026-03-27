@@ -49,6 +49,7 @@ button{background:#2e7d32;color:#fff;font-weight:bold}
 </div>
 
 <!-- BOTÕES GOOGLE (SEM DUPLICAÇÃO) -->
+<div id="boxDrive" style="display:none">
 <div class="card">
 <button onclick="conectarDrive()">🔑 Conectar Drive</button>
 <button onclick="loginGoogle()">🔐 Login Google</button>
@@ -411,10 +412,21 @@ if(accessToken){
  setInterval(()=>{
  syncDrive();
 }, 10000); // a cada 5 segundos
+
+ function toggleDrive(){
+ let box = document.getElementById("boxDrive");
+
+ if(box.style.display === "none"){
+  box.style.display = "block";
+ }else{
+  box.style.display = "none";
+ }
+ }
  
 </script>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </body>
+<button onclick="toggleDrive()">⚙️ Configurações</button>
 </html>
