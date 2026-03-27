@@ -53,12 +53,43 @@ button{background:#2e7d32;color:#fff;font-weight:bold}
 <button onclick="conectarDrive()">🔑 Conectar Drive</button>
 <button onclick="loginGoogle()">🔐 Login Google</button>
 <button onclick="salvarDrive()">☁️ Backup Drive</button>
+<button onclick="carregarDrive()">📥 Restaurar Backup</button>
 </div>
 
 <script>
 let ag=[];
 let editId=null;
 let accessToken = null;
+ 
+
+async function carregarDrive(){
+ if(!accessToken){
+  alert("Conecte o Drive primeiro");
+  return;
+ }
+
+ let fileId = localStorage.getItem("drive_file_id");
+
+ if(!fileId){
+  alert("Nenhum backup encontrado");
+  return;
+ }
+
+ let res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{
+  headers:{
+   Authorization: "Bearer " + accessToken
+  }
+ });
+
+ let dados = await res.json();
+
+ ag = dados;
+ salvarLocal();
+ render();
+
+ alert("Dados restaurados 🚀");
+}
+ 
 
 function conectarDrive(){
  const client = google.accounts.oauth2.initTokenClient({
@@ -241,7 +272,23 @@ function handleCredentialResponse(response){
  }
 
  
-window.onload=()=>{carregarLocal();render()}
+window.onload = ()=>{
+ carregarLocal();
+ render();
+
+ setTimeout(()=>{
+  if(accessToken){
+   carregarDrive();
+  }
+ },2000);
+ }
+
+salvarLocal();
+render();
+
+if(accessToken){
+ salvarDrive();
+ }
 </script>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
