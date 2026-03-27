@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+ <div id="usuarioLogado"></div>
 <title>Agenda PRO</title>
 
 <style>
@@ -167,8 +168,18 @@ function initGoogle(){
 }
 
 function loginGoogle(){
- gapi.auth2.getAuthInstance().signIn();
-}
+ const auth = gapi.auth2.getAuthInstance();
+
+ auth.signIn().then(user=>{
+  const perfil = user.getBasicProfile();
+
+  alert("Logado como: " + perfil.getName());
+
+ }).catch(err=>{
+  console.log(err);
+  alert("Erro no login");
+ });
+ }
 
 function salvarDrive(){
  if(!gapi.auth.getToken()){
