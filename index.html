@@ -173,17 +173,16 @@ function loginGoogle(){
  auth.signIn().then(user=>{
   const perfil = user.getBasicProfile();
 
-  alert("Logado como: " + perfil.getName());
+  usuarioLogado.innerHTML = "👤 " + perfil.getName();
 
  }).catch(err=>{
   console.log(err);
   alert("Erro no login");
  });
  }
-
-function salvarDrive(){
+ function salvarDrive(){
  if(!gapi.auth.getToken()){
-  alert("Faça login primeiro");
+ alert("Faça login primeiro");
   return;
  }
 
