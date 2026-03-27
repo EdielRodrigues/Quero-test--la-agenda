@@ -168,18 +168,21 @@ function initGoogle(){
 }
 
 function loginGoogle(){
- const auth = gapi.auth2.getAuthInstance();
-
- auth.signIn().then(user=>{
-  const perfil = user.getBasicProfile();
-
-  usuarioLogado.innerHTML = "👤 " + perfil.getName();
-
- }).catch(err=>{
-  console.log(err);
-  alert("Erro no login");
+ google.accounts.id.initialize({
+  client_id: "877191590019-7ob34ind8ksu4fjp91orrrrvnk9p10hp.apps.googleusercontent.com",
+  callback: handleCredentialResponse
  });
+
+ google.accounts.id.prompt();
+}
+
+function handleCredentialResponse(response){
+ console.log("TOKEN:", response.credential);
+
+ alert("Login realizado com sucesso 🚀");
  }
+
+ 
  function salvarDrive(){
  if(!gapi.auth.getToken()){
  alert("Faça login primeiro");
@@ -204,7 +207,7 @@ function loginGoogle(){
 window.onload=()=>{carregarLocal();render()}
 </script>
 
-<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </body>
 </html>
